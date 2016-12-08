@@ -57,16 +57,16 @@ end
 # create a dev instance of all available projects
 SUPPORTED_PROJECTS = {}
 ALL_PROJECTS.each do |key, data|
-    SUPPORTED_PROJECTS[key + "--vagrant"] = key
+    SUPPORTED_PROJECTS[key] = key
 end
 
 if ENV['PROJECT']
-    INSTANCE_NAME = ENV['PROJECT'] + "--vagrant"
+    PROJECT_NAME = ENV['PROJECT']
 else
     prn "Select a project:"
     KEYED = {}
     SUPPORTED_PROJECTS.each_with_index do |k,i|
-        KEYED[i+1] = k[0]
+        KEYED[i+1] = k[1]
     end
     
     default_project = nil
@@ -76,9 +76,9 @@ else
         fh.close()
     end
     DEFAULT_AVAILABLE = SUPPORTED_PROJECTS.include?(default_project)
-    
+
     vmlist = runningvms()
-    
+
     begin
         while true
             prn
@@ -100,7 +100,7 @@ else
             prn
             if not opt
                 if DEFAULT_AVAILABLE
-                    INSTANCE_NAME = default_project
+                    PROJECT_NAME = default_project
                     break
                 end
                 prn "a number is required"
@@ -110,14 +110,14 @@ else
                 next
             end
             
-            INSTANCE_NAME = KEYED[opt] # ll: elife-lax--vagrant
+            PROJECT_NAME = KEYED[opt] # ll: elife-lax
             break
         end
         
         # remember the selected project
         FileUtils.mkdir_p('projects/elife/')
         fh = File.open('projects/elife/.vproject', 'w')
-        fh.write(INSTANCE_NAME)
+        fh.write(PROJECT_NAME)
         fh.close()
         
     rescue Interrupt
@@ -126,12 +126,9 @@ else
 
 end
 
-PROJECT_NAME = SUPPORTED_PROJECTS[INSTANCE_NAME]  # ll: elife-lax
-IS_MASTER = PROJECT_NAME == "master-server"
-
 # necessary because we allow passing a project's name in via an ENV var
-if not SUPPORTED_PROJECTS.has_key? INSTANCE_NAME
-    prn "unknown project '#{INSTANCE_NAME}'"
+if not SUPPORTED_PROJECTS.has_key? PROJECT_NAME
+    prn "unknown project '#{PROJECT_NAME}'"
     prn "known projects: " + SUPPORTED_PROJECTS.keys.join(', ')
     abort 
 end
@@ -141,6 +138,9 @@ PRJ = YAML.load(IO.popen(cmd).read)
 
 #PP.pp PRJ
 #abort
+
+IS_MASTER = PROJECT_NAME == "master-server"
+INSTANCE_NAME = PROJECT_NAME + "--vagrant"
 
 # every project needs to tell us where to find it's formula for building it
 if not PRJ.key?("formula-repo")
