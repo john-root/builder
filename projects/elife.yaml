@@ -214,7 +214,7 @@ evanthia-prototype:
     vagrant:
         ram: 2048
         ports:
-            1340: 80
+            1341: 80
 
 
 elife-metrics:
