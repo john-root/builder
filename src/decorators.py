@@ -85,8 +85,9 @@ def requires_aws_project_stack(*project_list, **moreargs):
 
                 if running:
                     # instances need to be running to continue
-                    ensure(utils.confirm('Stack not running. Should it be started?'), "running stack required")
-                    lifecycle.start(stackname)
+                    if not core.find_ec2_instances(stackname):
+                        ensure(utils.confirm('Stack not running. Should it be started?'), "running stack required")
+                        lifecycle.start(stackname)
 
                 return func(stackname, *args, **kwargs)
 
