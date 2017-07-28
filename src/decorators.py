@@ -1,8 +1,8 @@
 import os
 from os.path import join
 import utils
-from buildercore import core, project, config
-from buildercore.utils import first, remove_ordereddict, errcho
+from buildercore import core, project, config, lifecycle
+from buildercore.utils import first, remove_ordereddict, errcho, ensure
 from functools import wraps
 from fabric.api import env, task
 from pprint import pformat
@@ -65,27 +65,34 @@ requires_branch_deployable_project = requires_filtered_project(lambda pname, pro
 # pylint: disable=invalid-name
 requires_project = requires_filtered_project(None)
 
-def requires_aws_project_stack(*plist):
-    if not plist:
-        plist = [utils._pick("project", project.project_list(), default_file=deffile('.project'))]
+def requires_aws_project_stack(*project_list, **moreargs):
+    running = moreargs.pop('running', True)
+    if not project_list:
+        project_list = [utils._pick("project", project.project_list(), default_file=deffile('.project'))]
 
     def wrap1(func):
         @wraps(func)
         def _wrapper(stackname=None, *args, **kwargs):
-            region = aws.find_region(stackname)
-            asl = core.active_stack_names(region)
-            if not asl:
-                print '\nno AWS stacks exist, cannot continue.'
-                return
+            try:
+                # pick an active stack from a list of projects
+                region = aws.find_region(stackname)
+                asl = core.active_stack_names(region)
+                ensure(asl, 'no AWS stacks exist, cannot continue.')
 
-            def pname_startswith(stack):
-                for pname in plist:
-                    if stack.startswith(pname):
-                        return stack
-            asl = filter(pname_startswith, asl)
-            if not stackname or stackname not in asl:
-                stackname = utils._pick("stack", asl)
-            return func(stackname, *args, **kwargs)
+                asl = [stack for stack in asl for pname in project_list if stack.startswith(pname)]
+                if not stackname or stackname not in asl:
+                    stackname = utils._pick("stack", asl)
+
+                if running:
+                    # instances need to be running to continue
+                    ensure(utils.confirm('Stack not running. Should it be started?'), "running stack required")
+                    lifecycle.start(stackname)
+
+                return func(stackname, *args, **kwargs)
+
+            except AssertionError as err:
+                errcho(err)
+                return
         return _wrapper
     return wrap1
 
@@ -105,6 +112,7 @@ def requires_aws_stack(func):
         args = args[1:]
         return func(stackname, *args, **kwargs)
     return call
+
 
 def requires_steady_stack(func):
     @wraps(func)

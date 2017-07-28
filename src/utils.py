@@ -96,6 +96,7 @@ def confirm(message):
     print message
     print 'press any key to confirm (ctrl-c to quit)'
     get_input('')
+    return True
 
 def walk_nested_struct(val, fn):
     "walks a potentially nested structure, calling `fn` on each value it encounters"
