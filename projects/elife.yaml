@@ -170,7 +170,7 @@ lax:
             - 22
             - 443
             - 80:
-                cidr-ip: 10.0.2.0/24 # internal access only
+                cidr-ip: 10.0.0.0/16 # internal access only
             - 8001 # bot-lax api
         sqs:
             bot-lax-{instance}-inc: {}
@@ -499,7 +499,7 @@ journal-cms:
             - 22
             - 443
             - 80:
-                cidr-ip: 10.0.2.0/24 # access via VPC ip range only
+                cidr-ip: 10.0.0.0/16 # access via VPC ip range only
         sqs:
             # journal-cms--prod, journal-cms--end2end, etc.
             journal-cms--{instance}:
@@ -719,7 +719,7 @@ medium:
         ports:
             - 22
             - 80:
-                cidr-ip: 10.0.2.0/24 # internal access only
+                cidr-ip: 10.0.0.0/16 # internal access only
     aws-alt:
         clustered:
             ec2:
@@ -770,7 +770,7 @@ search:
         ports:
             - 22
             - 80:
-                cidr-ip: 10.0.2.0/24 # internal access only
+                cidr-ip: 10.0.0.0/16 # internal access only
         sqs:
             # search--prod, search--end2end, etc.
             search--{instance}:
